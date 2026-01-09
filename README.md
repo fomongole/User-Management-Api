@@ -48,7 +48,7 @@ This project demonstrates advanced backend concepts including **JWT authenticati
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/user-auth-api.git
+git clone https://github.com/fomongole/User-Management-Api.git
 cd user-auth-api
 ```
 
