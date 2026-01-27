@@ -1,165 +1,151 @@
-# User Authentication & Management API
+# Scalable User Auth & Management API
 
-A production-ready, secure RESTful API built with **Node.js**, **Express**, and **MongoDB**.  
-This project demonstrates advanced backend concepts including **JWT authentication**, **Role-Based Access Control (RBAC)**, **secure password handling**, **email verification simulation**, and **containerization with Docker**.
+A high-performance, production-ready RESTful API built with **Node.js**, **Express**, **MongoDB**, and **Redis**.
 
----
-
-## Features
-
-### Core Authentication & Security
-- **JWT Authentication** – Secure stateless authentication using JSON Web Tokens
-- **Password Hashing** – Industry-standard bcrypt hashing for password storage
-- **Security Headers** – Implemented via Helmet to protect against common vulnerabilities
-- **CORS Configuration** – Controlled Cross-Origin Resource Sharing for client security
-
-### User Management
-- **User Registration** – Secure sign-up with duplicate email prevention
-- **Email Verification** – Token-based email verification simulation using Crypto & Nodemailer
-- **Profile Management** – Users can view, update, and delete their own profiles
-- **RBAC (Admin Access)** – Admin-only routes for user management
-
-### DevOps & Quality
-- **Dockerized** – Fully containerized for consistent deployments
-- **Integration Tests** – Jest & Supertest ensure API reliability
-- **MVC Architecture** – Clean separation of concerns
+This project has been architected for scalability using **Docker Compose**, featuring **NGINX Load Balancing**, **Redis Caching**, **Advanced Validation**, and **Role-Based Access Control (RBAC)**.
 
 ---
 
-## Tech Stack
+## 🚀 Key Features
 
-- **Runtime:** Node.js
-- **Framework:** Express.js
-- **Database:** MongoDB (Atlas)
-- **ODM:** Mongoose
-- **Auth:** JWT, Bcrypt
-- **Testing:** Jest, Supertest
-- **DevOps:** Docker
-- **Utilities:** Nodemailer, Winston, Dotenv
+### 🏗️ Scalable Architecture
+- **Load Balancing** – **NGINX** reverse proxy distributes traffic (Port 80) to backend containers.
+- **High-Performance Caching** – **Redis** implements the "Cache-Aside" strategy to reduce DB load by ~80%.
+- **Containerized Stack** – Multi-container setup (App, Mongo, Redis, Nginx) orchestrated via Docker Compose.
+
+### 🛡️ Core Security & Auth
+- **JWT Authentication** – Secure stateless authentication with Bearer tokens.
+- **Input Validation** – Robust request sanitization using **express-validator** (middleware layer).
+- **Security Headers** – Helmet.js integration for HTTP security.
+- **CORS Protection** – Configurable origin access for frontend integration.
+
+### 👤 User Management
+- **Console-Based Email Simulation** – Verification links printed to container logs (no external SMTP needed for dev).
+- **Profile Management** – Secure update/delete flows with automatic **Cache Invalidation**.
+- **Admin Seeding** – Automated script to generate Super Admin users securely.
 
 ---
 
-## Installation & Local Setup
+## 🛠️ Tech Stack
+
+| Category | Technology |
+| :--- | :--- |
+| **Runtime** | Node.js v18+ |
+| **Framework** | Express.js |
+| **Database** | MongoDB (Mongoose ODM) |
+| **Caching** | Redis (In-Memory Data Store) |
+| **Load Balancer** | NGINX |
+| **Validation** | Express-Validator |
+| **DevOps** | Docker, Docker Compose |
+| **Testing** | Postman, Jest (Integration) |
+
+---
+
+## ⚙️ Installation & Setup
 
 ### Prerequisites
-- Node.js **v18+**
-- MongoDB Atlas connection string
-- Docker (optional)
+- **Docker Desktop** (Required for the full stack)
+- **Node.js v18+** (Only if running locally without Docker)
 
 ### 1. Clone the Repository
 ```bash
 git clone https://github.com/fomongole/User-Management-Api.git
 cd user-auth-api
 ```
+### 2. Configure Environment
 
-### 2. Install Dependencies
-```bash
-npm install
-```
+The project comes with a ready-to-use `.env` file for local development.  
+(See `.env` in root directory).
 
-### 3. Environment Configuration
+## 🐳 Running with Docker Compose (Recommended)
 
-Create a `.env` file in the project root:
+This command spins up the entire infrastructure: Node API, MongoDB, Redis, and NGINX.
 
-```env
-NODE_ENV=development
-PORT=5000
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_super_secret_jwt_key
-SMTP_HOST=smtp.mailtrap.io
-SMTP_PORT=2525
-SMTP_EMAIL=your_smtp_user
-SMTP_PASSWORD=your_smtp_password
-FROM_EMAIL=noreply@example.com
-FROM_NAME=AuthService
-```
-
-### 4. Run the Server
+### 1. Start the System
 
 ```bash
-# Development (hot reload)
-npm run dev
-
-# Production
-npm start
+docker-compose up --build
 ```
+
+**Note:** The API will be accessible at http://localhost:80 (via NGINX).
+
+### 2. View Verification Emails
+
+Since this is a dev environment, email links are printed to the terminal logs.
+
+```bash
+# In a separate terminal
+docker-compose logs -f app
+```
+
+Look for: **"Verification Email Sent to Console"**
+
+### 3. Create an Admin User (Seeding)
+
+To test Admin routes, run the seeder script inside the running container:
+
+```bash
+docker-compose exec app node src/seeder.js
+```
+
+Creates: `admin@example.com / adminpassword123`
 
 ---
 
-## 🐳 Running with Docker
+## 🧪 Testing the API
 
-### Build the Image
-```bash
-docker build -t user-auth-api .
-```
+**Base URL**  
+http://localhost:80 (Proxied via NGINX)
 
-### Run the Container
-```bash
-docker run -p 5000:5000 --env-file .env user-auth-api
-```
+### Authentication Endpoints
 
-API available at **http://localhost:5000**
+| Method | Endpoint | Description | Validation |
+|------|--------|------------|------------|
+| POST | /api/auth/register | Register new user | ✅ Name, Email, Pwd |
+| POST | /api/auth/login | Login & get Token | ✅ Email, Pwd |
+| PUT | /api/auth/verifyemail/:token | Verify Account | ❌ |
 
----
+### User Endpoints (Requires Bearer Token)
 
-## Running Tests
+| Method | Endpoint | Description | Cache Strategy |
+|------|--------|------------|----------------|
+| GET | /api/auth/profile | Get own profile | ⚡ Redis Hit/Miss |
+| PUT | /api/auth/profile | Update profile | 🗑️ Invalidates Cache |
+| DELETE | /api/auth/profile | Delete account | 🗑️ Invalidates Cache |
 
-```bash
-npm test
-```
+### Admin Endpoints (Requires Admin Token)
 
-> Ensure `.env` is configured correctly — tests require a database connection.
-
----
-
-## API Endpoints
-
-### Authentication
-
-| Method | Endpoint | Description | Auth |
-|------|---------|-------------|------|
-| POST | `/api/auth/register` | Register user & send verification email | ❌ |
-| POST | `/api/auth/login` | Login & receive JWT | ❌ |
-| PUT | `/api/auth/verifyemail/:token` | Verify email using token | ❌ |
-
-### User Operations
-
-| Method | Endpoint | Description | Auth |
-|------|---------|-------------|------|
-| GET | `/api/auth/profile` | Get user profile | ✅ User |
-| PUT | `/api/auth/profile` | Update name/password | ✅ User |
-| DELETE | `/api/auth/profile` | Delete own account | ✅ User |
-
-### Admin Operations
-
-| Method | Endpoint | Description | Auth |
-|------|---------|-------------|------|
-| GET | `/api/auth/users` | Get all users | ✅ Admin |
-| DELETE | `/api/auth/users/:id` | Delete user by ID | ✅ Admin |
+| Method | Endpoint | Description |
+|------|--------|------------|
+| GET | /api/auth/users | List all users |
+| DELETE | /api/auth/users/:id | Ban/Delete user |
 
 ---
 
-## Project Structure
+## 📂 Project Structure
 
-```text
+```plaintext
 user-auth-api/
+├── nginx/                  # NGINX Configuration
+│   └── nginx.conf          # Load Balancer settings
 ├── src/
-│   ├── config/         # Database connection
-│   ├── controllers/    # Business logic
-│   ├── middlewares/    # Auth & error handling
-│   ├── models/         # Mongoose schemas
-│   ├── routes/         # API routes
-│   ├── utils/          # Helpers (Email, tokens, etc.)
-│   ├── app.js          # Express app
-│   └── server.js       # Entry point
-├── tests/              # Integration tests
-├── .env
-├── Dockerfile
+│   ├── config/             # DB & Redis connection logic
+│   ├── controllers/        # Business logic
+│   ├── middlewares/        # Auth, Error, & Validation Middleware
+│   ├── models/             # Mongoose Schemas
+│   ├── routes/             # API Routes
+│   ├── utils/              # Token generation helpers
+│   ├── validators/         # Express-Validator rules
+│   ├── seeder.js           # Admin User Seed Script
+│   └── server.js           # Entry Point
+├── .env                    # Environment Variables
+├── docker-compose.yml      # Orchestration Config
+├── Dockerfile              # App Container Config
 └── package.json
 ```
 
 ---
 
-## License
+## 📜 License
 
-Licensed under the **MIT License**.
+Licensed under the MIT License.
