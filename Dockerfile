@@ -1,12 +1,10 @@
 # 1. Use an official Node.js runtime as a parent image
-# Alpine is a very small, lightweight version of Linux
 FROM node:18-alpine
 
 # 2. Set the working directory inside the container
 WORKDIR /app
 
-# 3. Copy package.json and package-lock.json first
-# We do this separately to take advantage of Docker's caching
+# 3. Copy package.json and package-lock.json
 COPY package*.json ./
 
 # 4. Install dependencies

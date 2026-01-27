@@ -10,10 +10,25 @@ const errorHandler = (err, req, res, next) => {
   let statusCode = res.statusCode === 200 ? 500 : res.statusCode;
   let message = err.message;
 
-  // Handle for Mongoose "CastError" (Invalid ObjectId) ---
+  // 1. Handle Mongoose "CastError" (Invalid ObjectId, e.g. wrong ID format in URL)
   if (err.name === 'CastError' && err.kind === 'ObjectId') {
     statusCode = 404;
     message = 'Resource not found';
+  }
+
+  // 2. Handle Mongoose "ValidationError" (e.g., empty fields, invalid email regex)
+  if (err.name === 'ValidationError') {
+    statusCode = 400;
+    // Extract just the clean messages from the error object
+    message = Object.values(err.errors)
+        .map((val) => val.message)
+        .join(', ');
+  }
+
+  // 3. Handle Mongoose Duplicate Key Error (e.g., registering with same email)
+  if (err.code === 11000) {
+    statusCode = 400;
+    message = 'Duplicate field value entered';
   }
 
   res.status(statusCode);

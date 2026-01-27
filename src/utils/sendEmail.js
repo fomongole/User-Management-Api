@@ -2,11 +2,11 @@ import nodemailer from 'nodemailer';
 
 const sendEmail = async (options) => {
   // 1. Creating a transporter (using Ethereal for testing, or Gmail/SendGrid for prod)
-  // For this demo, i use a "Stub" service so i don't need real credentials yet.
-  // In a real app, i would put SMTP credentials in .env
+  // For this demo, I use a "Stub" service, so I don't need real credentials yet.
+  // In a real app, I would put SMTP credentials in .env
   
   // For development, using Mailtrap or Ethereal. 
-  // Using a standard setup that i can swap easily.
+  // Using a standard setup that I can swap easily.
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.mailtrap.io',
     port: process.env.SMTP_PORT || 2525,

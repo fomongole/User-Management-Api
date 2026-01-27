@@ -1,44 +1,45 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import redisClient from '../config/redis.js';
 
 export const protect = async (req, res, next) => {
   let token;
 
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
-  ) {
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     try {
       token = req.headers.authorization.split(' ')[1];
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      // Fetch user from DB
+      // 1. CHECK REDIS CACHE
+      const cacheKey = `user:${decoded.id}`;
+      const cachedUser = await redisClient.get(cacheKey);
+
+      if (cachedUser) {
+        req.user = JSON.parse(cachedUser);
+        return next();
+      }
+
+      // 2. IF MISS, CHECK MONGODB
       req.user = await User.findById(decoded.id).select('-password');
 
-      // Check if user was actually found!
       if (!req.user) {
         res.status(401);
-        throw new Error('Not authorized, user not found');
+        return next(new Error('Not authorized, user not found'));
       }
+
+      // 3. SAVE TO CACHE (Expires in 1 hour)
+      await redisClient.setEx(cacheKey, 3600, JSON.stringify(req.user));
 
       next();
     } catch (error) {
       console.error(error);
-      // If the error was already thrown above (401), keep it. 
-      // Otherwise set to 401 for token failure.
-      if (res.statusCode !== 401) {
-        res.status(401);
-      }
-      // If we manually threw "user not found", pass that message. 
-      // Otherwise pass generic token failed.
-      throw new Error(error.message === 'Not authorized, user not found' ? error.message : 'Not authorized, token failed');
+      res.status(401);
+      return next(new Error('Not authorized, token failed'));
     }
-  }
-
-  if (!token) {
+  } else {
     res.status(401);
-    throw new Error('Not authorized, no token');
+    return next(new Error('Not authorized, no token'));
   }
 };
 
@@ -47,6 +48,6 @@ export const admin = (req, res, next) => {
     next();
   } else {
     res.status(403);
-    throw new Error('Not authorized as an admin');
+    next(new Error('Not authorized as an admin'));
   }
 };

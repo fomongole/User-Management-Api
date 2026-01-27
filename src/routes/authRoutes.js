@@ -1,8 +1,8 @@
 import express from 'express';
-import { 
-  register, 
-  login, 
-  getUserProfile, 
+import {
+  register,
+  login,
+  getUserProfile,
   getAllUsers,
   updateUserProfile,
   deleteUserProfile,
@@ -11,20 +11,27 @@ import {
 } from '../controllers/authController.js';
 import { protect, admin } from '../middlewares/authMiddleware.js';
 
+import {
+  validateRegister,
+  validateLogin,
+  validateUpdateProfile
+} from '../validators/authValidators.js';
+
 const router = express.Router();
 
-router.post('/register', register);
-router.post('/login', login);
+// --- Public Routes ---
+router.post('/register', validateRegister, register);
+router.post('/login', validateLogin, login);
 router.put('/verifyemail/:token', verifyEmail);
 
-// User Profile Routes (Get, Update, Delete Self)
+// --- Private Routes ---
 router
-  .route('/profile')
-  .get(protect, getUserProfile)
-  .put(protect, updateUserProfile)
-  .delete(protect, deleteUserProfile);
+    .route('/profile')
+    .get(protect, getUserProfile)
+    .put(protect, validateUpdateProfile, updateUserProfile)
+    .delete(protect, deleteUserProfile);
 
-// Admin Routes (Get All, Delete Specific User)
+// --- Admin Routes ---
 router.get('/users', protect, admin, getAllUsers);
 router.delete('/users/:id', protect, admin, deleteUser);
 
