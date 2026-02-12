@@ -10,13 +10,13 @@ const errorHandler = (err, req, res, next) => {
   let statusCode = res.statusCode === 200 ? 500 : res.statusCode;
   let message = err.message;
 
-  // 1. Handle Mongoose "CastError" (Invalid ObjectId, e.g. wrong ID format in URL)
+  // 1. Handles Mongoose "CastError" (Invalid ObjectId, e.g. wrong ID format in URL)
   if (err.name === 'CastError' && err.kind === 'ObjectId') {
     statusCode = 404;
     message = 'Resource not found';
   }
 
-  // 2. Handle Mongoose "ValidationError" (e.g., empty fields, invalid email regex)
+  // 2. Handles Mongoose "ValidationError" (e.g., empty fields, invalid email regex)
   if (err.name === 'ValidationError') {
     statusCode = 400;
     // Extract just the clean messages from the error object

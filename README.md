@@ -41,57 +41,6 @@ This project has been architected for scalability using **Docker Compose**, feat
 
 ---
 
-## ⚙️ Installation & Setup
-
-### Prerequisites
-- **Docker Desktop** (Required for the full stack)
-- **Node.js v18+** (Only if running locally without Docker)
-
-### 1. Clone the Repository
-```bash
-git clone https://github.com/fomongole/User-Management-Api.git
-cd user-auth-api
-```
-### 2. Configure Environment
-
-The project comes with a ready-to-use `.env` file for local development.  
-(See `.env` in root directory).
-
-## 🐳 Running with Docker Compose (Recommended)
-
-This command spins up the entire infrastructure: Node API, MongoDB, Redis, and NGINX.
-
-### 1. Start the System
-
-```bash
-docker-compose up --build
-```
-
-**Note:** The API will be accessible at http://localhost:80 (via NGINX).
-
-### 2. View Verification Emails
-
-Since this is a dev environment, email links are printed to the terminal logs.
-
-```bash
-# In a separate terminal
-docker-compose logs -f app
-```
-
-Look for: **"Verification Email Sent to Console"**
-
-### 3. Create an Admin User (Seeding)
-
-To test Admin routes, run the seeder script inside the running container:
-
-```bash
-docker-compose exec app node src/seeder.js
-```
-
-Creates: `admin@example.com / adminpassword123`
-
----
-
 ## 🧪 Testing the API
 
 **Base URL**  
@@ -143,8 +92,6 @@ user-auth-api/
 ├── Dockerfile              # App Container Config
 └── package.json
 ```
-
----
 
 ## 📜 License
 
